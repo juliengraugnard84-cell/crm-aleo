@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Documents PDF{% endblock %}
+
+{% block content %}
+
+<div class="header-row">
+    <h1>Documents PDF</h1>
+</div>
+
+<!-- Formulaire Upload PDF global -->
+<div class="card">
+    <h2>Importer un document PDF</h2>
+
+    <form method="post"
+          action="{{ url_for('upload_document') }}"
+          enctype="multipart/form-data"
+          style="margin-top: 1rem;">
+        <label>Choisir un fichier PDF :</label>
+        <input type="file" name="file" accept="application/pdf" required>
+
+        <button class="btn" type="submit" style="margin-top: 1rem;">
+            Importer
+        </button>
+    </form>
+</div>
+
+<!-- Liste des documents -->
+<div class="card">
+    <h2>Liste des documents</h2>
+
+    <table class="table" style="margin-top: 1rem;">
+        <thead>
+            <tr>
+                <th>Nom du PDF</th>
+                <th>Client associé</th>
+                <th>Importé le</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for doc in documents %}
+            <tr>
+                <td>{{ doc.original_name }}</td>
+
+                <td>
+                    {% if doc.client %}
+                        <a href="{{ url_for('client_detail', client_id=doc.client.id) }}">
+                            {{ doc.client.name }}
+                        </a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
+                <td>{{ doc.uploaded_at.strftime("%d/%m/%Y %H:%M") }}</td>
+
+                <td class="actions">
+                    <a href="{{ url_for('download_document', doc_id=doc.id) }}">Télécharger</a>
+
+                    <form method="post"
+                          action="{{ url_for('delete_document', doc_id=doc.id) }}"
+                          onsubmit="return confirm('Supprimer ce document ?');">
+                        <button class="danger" type="submit">Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" style="text-align:center;">Aucun document trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

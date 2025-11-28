@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Fiche client{% endblock %}
+
+{% block content %}
+
+<div class="header-row">
+    <h1>{{ client.name }}</h1>
+    <a class="btn" href="{{ url_for('edit_client', client_id=client.id) }}">Modifier</a>
+</div>
+
+<div class="grid">
+
+    <!-- Infos client -->
+    <div class="card">
+        <h2>Informations</h2>
+        <p><strong>Commercial :</strong> {{ client.commercial }}</p>
+        <p><strong>Statut :</strong> {{ client.status }}</p>
+        <p><strong>Email :</strong> {{ client.email or '-' }}</p>
+        <p><strong>Téléphone :</strong> {{ client.phone or '-' }}</p>
+        <p><strong>Adresse :</strong> {{ client.address or '-' }}</p>
+        <p><strong>Notes :</strong><br>{{ client.notes or '-' }}</p>
+
+        <p style="margin-top:1rem;">
+            <a class="btn" href="{{ url_for('export_client_pdf', client_id=client.id) }}">
+                Exporter la fiche en PDF
+            </a>
+        </p>
+    </div>
+
+    <!-- Rendez-vous -->
+    <div class="card">
+        <h2>Rendez-vous</h2>
+        {% if appointments %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Heure</th>
+                        <th>Titre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for rdv in appointments %}
+                    <tr>
+                        <td>{{ rdv.date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ rdv.time.strftime('%H:%M') }}</td>
+                        <td>{{ rdv.title }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Aucun rendez-vous.</p>
+        {% endif %}
+
+        <p style="margin-top:1rem;">
+            <a class="btn"
+               href="{{ url_for('new_appointment', client_id=client.id) }}">
+                + Nouveau RDV
+            </a>
+        </p>
+    </div>
+
+    <!-- Documents -->
+    <div class="card">
+        <h2>Documents PDF</h2>
+
+        <form method="post" action="{{ url_for('upload_document') }}"
+              enctype="multipart/form-data" style="margin-bottom:1rem;">
+            <input type="hidden" name="client_id" value="{{ client.id }}">
+            <input type="file" name="file" accept="application/pdf">
+            <button class="btn" style="margin-top:0.5rem;">Uploader</button>
+        </form>
+
+        {% if documents %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Importé le</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for doc in documents %}
+                    <tr>
+                        <td>{{ doc.original_name }}</td>
+                        <td>{{ doc.uploaded_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="actions">
+                            <a href="{{ url_for('download_document', doc_id=doc.id) }}">
+                                Télécharger
+                            </a>
+                            <form method="post"
+                                  action="{{ url_for('delete_document', doc_id=doc.id) }}"
+                                  onsubmit="return confirm('Supprimer ce document ?');">
+                                <button class="danger">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Aucun document.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

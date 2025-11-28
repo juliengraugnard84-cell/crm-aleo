@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block content %}
+
+<div class="header-row">
+    <h1>Gestion des utilisateurs</h1>
+</div>
+
+<!-- FORMULAIRE DE CRÉATION D’UN COMMERCIAL -->
+<div class="card">
+    <h2>Créer un nouvel utilisateur</h2>
+
+    <form method="post" action="{{ url_for('admin_users') }}">
+        <label>Nom d'utilisateur</label>
+        <input type="text" name="username" required placeholder="ex: marc">
+
+        <label>Mot de passe</label>
+        <input type="password" name="password" required>
+
+        <button class="btn" style="margin-top:1rem;">Créer l'utilisateur</button>
+    </form>
+</div>
+
+<!-- LISTE DES UTILISATEURS EXISTANTS -->
+<div class="card" style="margin-top:1.5rem;">
+    <h2>Liste des utilisateurs</h2>
+
+    <table class="table" style="margin-top:1rem;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nom d'utilisateur</th>
+                <th>Rôle</th>
+                <th style="width:180px;">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>
+                    {% if user.role == 'admin' %}
+                        <strong style="color:#d32f2f;">Admin</strong>
+                    {% else %}
+                        Commercial
+                    {% endif %}
+                </td>
+
+                <td class="actions">
+
+                    {% if user.role != "admin" %}
+                    <a class="btn" href="{{ url_for('admin_edit_user', user_id=user.id) }}"
+                       style="padding:0.3rem 0.6rem;">Modifier</a>
+
+                    <form method="post"
+                          action="{{ url_for('admin_delete_user', user_id=user.id) }}"
+                          onsubmit="return confirm('Supprimer cet utilisateur ?');">
+                        <button class="danger" style="padding:0.3rem 0.6rem;">Supprimer</button>
+                    </form>
+                    {% endif %}
+
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Nouveau client' if action == 'new' else 'Modifier le client' }}{% endblock %}
+
+{% block content %}
+
+<div class="header-row">
+    <h1>{{ 'Nouveau client' if action == 'new' else 'Modifier le client' }}</h1>
+</div>
+
+<div class="card">
+    <form method="post">
+
+        <label>Nom du client</label>
+        <input type="text" name="name" required
+               value="{{ client.name if client else '' }}">
+
+        <label>Email</label>
+        <input type="email" name="email"
+               value="{{ client.email if client else '' }}">
+
+        <label>Téléphone</label>
+        <input type="text" name="phone"
+               value="{{ client.phone if client else '' }}">
+
+        <label>Adresse</label>
+        <input type="text" name="address"
+               value="{{ client.address if client else '' }}">
+
+        <label>Commercial</label>
+        <input type="text" name="commercial" required
+               value="{{ client.commercial if client else '' }}">
+
+        <label>Statut du dossier</label>
+        <select name="status">
+            {% set current_status = client.status if client else 'en cours' %}
+            {% for s in statuses %}
+                <option value="{{ s }}" {% if s == current_status %}selected{% endif %}>
+                    {{ s }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <label>Notes</label>
+        <textarea name="notes" rows="4">{{ client.notes if client else '' }}</textarea>
+
+        <button class="btn" style="margin-top:1rem;">
+            {{ 'Créer le client' if action == 'new' else 'Enregistrer' }}
+        </button>
+    </form>
+</div>
+
+{% endblock %}

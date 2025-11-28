@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mini CRM{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- ░░░ TOPBAR ░░░ -->
+    <div class="topbar">
+        <div class="logo">Mini CRM</div>
+
+        <nav>
+            {% if session.get('user_id') %}
+
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('clients') }}">Clients</a>
+                <a href="{{ url_for('list_appointments') }}">Calendrier / RDV</a>
+                <a href="{{ url_for('documents') }}">Documents PDF</a>
+                <a href="{{ url_for('chiffre_affaire') }}">Chiffre d'affaires</a>
+                <a href="{{ url_for('chat') }}">Chat d’équipe</a>
+
+                <!-- ░░░ LIEN ADMIN PROTÉGÉ ░░░ -->
+                {% if session.get('role') == 'admin' %}
+                    <a href="{{ url_for('admin_users') }}" style="color:#e91e63; font-weight:bold;">
+                        Administration
+                    </a>
+                {% endif %}
+
+                <a href="{{ url_for('logout') }}">
+                    Déconnexion ({{ session['username'] }})
+                </a>
+
+            {% endif %}
+        </nav>
+    </div>
+
+    <div class="container">
+
+        <!-- ░░░ FLASH MESSAGES ░░░ -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- ░░░ CONTENU DES PAGES ░░░ -->
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>

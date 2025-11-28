@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Rendez-vous{% endblock %}
+
+{% block content %}
+
+<div class="header-row">
+    <h1>Calendrier / Rendez-vous</h1>
+    <a class="btn" href="{{ url_for('new_appointment') }}">+ Nouveau RDV</a>
+</div>
+
+<!-- ========= MINI CALENDRIER ========= -->
+<div class="card">
+    <div class="header-row">
+        <h2>Calendrier</h2>
+        <div class="mini-cal-nav">
+            <button type="button" id="prev-month">←</button>
+            <span id="mini-cal-title"></span>
+            <button type="button" id="next-month">→</button>
+        </div>
+    </div>
+
+    <table class="mini-calendar">
+        <thead>
+            <tr>
+                <th>Lu</th>
+                <th>Ma</th>
+                <th>Me</th>
+                <th>Je</th>
+                <th>Ve</th>
+                <th>Sa</th>
+                <th>Di</th>
+            </tr>
+        </thead>
+        <tbody id="mini-cal-body">
+            <!-- rempli en JS -->
+        </tbody>
+    </table>
+
+    <p style="margin-top:0.5rem; font-size:0.85rem;">
+        Cliquez sur un jour pour filtrer les rendez-vous ci-dessous.
+    </p>
+</div>
+
+<!-- ========= FILTRE PAR DATE ========= -->
+<form method="get" class="filter-form" style="margin-top: 1rem; margin-bottom: 1rem;">
+    <label>Filtrer par date :</label>
+    <input type="date" name="date" value="{{ request.args.get('date', '') }}">
+    <button type="submit">Filtrer</button>
+    <a href="{{ url_for('list_appointments') }}" class="btn-link">Réinitialiser</a>
+</form>
+
+<!-- ========= TABLEAU DES RDV ========= -->
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Heure</th>
+            <th>Titre</th>
+            <th>Client</th>
+            <th>Notes</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for rdv in appointments %}
+        <tr>
+            <td>{{ rdv.date.strftime("%d/%m/%Y") }}</td>
+            <td>{{ rdv.time.strftime("%H:%M") }}</td>
+            <td>{{ rdv.title }}</td>
+            <td>{{ rdv.client_name }}</td>
+            <td>{{ rdv.notes or "-" }}</td>
+            <td class="actions">
+                <a href="{{ url_for('edit_appointment', appointment_id=rdv.id) }}">Modifier</a>
+                <form method="post"
+                      action="{{ url_for('delete_appointment', appointment_id=rdv.id) }}"
+                      onsubmit="return confirm('Supprimer ce rendez-vous ?');">
+                    <button type="submit" class="danger">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">Aucun rendez-vous.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- ========= JS MINI CALENDRIER ========= -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const titleEl = document.getElementById('mini-cal-title');
+    const bodyEl = document.getElementById('mini-cal-body');
+    const prevBtn = document.getElementById('prev-month');
+    const nextBtn = document.getElementById('next-month');
+
+    const selectedDateStr = "{{ request.args.get('date', '') }}"; // ex: 2025-11-21
+
+    let current = new Date();
+    if (selectedDateStr) {
+        const parts = selectedDateStr.split("-");
+        if (parts.length === 3) {
+            const y = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            if (!isNaN(y) && !isNaN(m)) {
+                current = new Date(y, m, 1);
+            }
+        }
+    }
+
+    function pad(n) { return n < 10 ? "0" + n : "" + n; }
+
+    function renderCalendar() {
+        const year = current.getFullYear();
+        const month = current.getMonth(); // 0-11
+
+        const monthNames = [
+            "Janvier","Février","Mars","Avril","Mai","Juin",
+            "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+        ];
+        titleEl.textContent = monthNames[month] + " " + year;
+
+        bodyEl.innerHTML = "";
+
+        const firstDay = new Date(year, month, 1);
+        // getDay() : 0 = dimanche, 1 = lundi... → on veut 0 = lundi
+        let startWeekday = firstDay.getDay();
+        startWeekday = (startWeekday + 6) % 7;
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        let row = document.createElement('tr');
+
+        // cellules vides avant le 1er
+        for (let i = 0; i < startWeekday; i++) {
+            const td = document.createElement('td');
+            td.className = "empty";
+            row.appendChild(td);
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            if (row.children.length === 7) {
+                bodyEl.appendChild(row);
+                row = document.createElement('tr');
+            }
+
+            const td = document.createElement('td');
+            td.textContent = day;
+            const dateStr = year + "-" + pad(month + 1) + "-" + pad(day);
+            td.dataset.date = dateStr;
+            td.classList.add("mini-cal-day");
+
+            if (selectedDateStr === dateStr) {
+                td.classList.add("selected");
+            }
+
+            td.addEventListener('click', function() {
+                window.location.href = "{{ url_for('list_appointments') }}" + "?date=" + dateStr;
+            });
+
+            row.appendChild(td);
+        }
+
+        // compléter la dernière ligne avec des cases vides
+        if (row.children.length > 0) {
+            while (row.children.length < 7) {
+                const td = document.createElement('td');
+                td.className = "empty";
+                row.appendChild(td);
+            }
+            bodyEl.appendChild(row);
+        }
+    }
+
+    prevBtn.addEventListener('click', function() {
+        current.setMonth(current.getMonth() - 1);
+        renderCalendar();
+    });
+
+    nextBtn.addEventListener('click', function() {
+        current.setMonth(current.getMonth() + 1);
+        renderCalendar();
+    });
+
+    renderCalendar();
+});
+</script>
+
+{% endblock %}

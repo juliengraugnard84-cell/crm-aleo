@@ -1,0 +1,6 @@
+flask
+flask_sqlalchemy
+reportlab
+openai>=1.6.0
+python-dotenv
+openai>=1.40.0
